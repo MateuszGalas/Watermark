@@ -61,7 +61,11 @@ fun main() {
                     (weight * w.blue + (100 - weight) * i.blue) / 100
                 )
 
-                myOutput.setRGB(x, y, color.rgb)
+                if (w.alpha == 0) {
+                    myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
+                } else {
+                    myOutput.setRGB(x, y, color.rgb)
+                }
             }
         }
 
