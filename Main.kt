@@ -10,6 +10,9 @@ import javax.imageio.ImageIO
 fun main() {
     try {
         var alphaChannel = false
+        var transparency = false
+        var transparencyColor = Color(0, 0, 0)
+
         println("Input the image filename:")
         val image = File(readln())
         if (checkImage(image, "image")) return
@@ -28,6 +31,24 @@ fun main() {
             println("Do you want to use the watermark's Alpha channel?")
             val choice = readln()
             alphaChannel = choice.equals("yes", true)
+        }
+
+        if (myWatermark.transparency != Transparency.TRANSLUCENT) {
+            println("Do you want to set a transparency color?")
+            val choice = readln()
+            transparency = choice.equals("yes", true)
+        }
+
+        if (transparency) {
+            println("Input a transparency color ([Red] [Green] [Blue]):")
+            try {
+                val colors = readln().split(" ").map { it.toInt() }
+                if (colors.size != 3) throw Exception()
+                transparencyColor = Color(colors[0], colors[1], colors[2])
+            } catch (e: Exception) {
+                println("The transparency color input is invalid.")
+                return
+            }
         }
 
         println("Input the watermark transparency percentage (Integer 0-100):")
@@ -61,10 +82,22 @@ fun main() {
                     (weight * w.blue + (100 - weight) * i.blue) / 100
                 )
 
-                if (w.alpha == 0) {
-                    myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
+                if (alphaChannel) {
+                    if (w.alpha == 0) {
+                        myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
+                    } else {
+                        myOutput.setRGB(x, y, color.rgb)
+                    }
                 } else {
-                    myOutput.setRGB(x, y, color.rgb)
+                    if (transparency) {
+                        if (w.rgb == transparencyColor.rgb) {
+                            myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
+                        } else {
+                            myOutput.setRGB(x, y, color.rgb)
+                        }
+                    } else {
+                        myOutput.setRGB(x, y, color.rgb)
+                    }
                 }
             }
         }
@@ -84,7 +117,6 @@ fun checkImage(image: File, choice: String): Boolean {
         return true
     }
     val myImage = ImageIO.read(image)
-
 
     if (myImage.colorModel.numColorComponents != 3) {
         println("The number of $name color components isn't 3.")
