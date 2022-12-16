@@ -73,13 +73,29 @@ fun main() {
             }
         }
 
-        /*if (single) {
+        var positionX = 0
+        var positionY = 0
+        if (single) {
             println("Input the watermark position " +
-                    "([x 0-${myImage.width - myWatermark.width}] [y 0-${myImage.height - myWatermark.height}):")
-
-        } else {
-
-        }*/
+                    "([x 0-${myImage.width - myWatermark.width}] [y 0-${myImage.height - myWatermark.height}]):")
+            val position = readln().let {
+                if (it.matches("""-?\d+\s-?\d+""".toRegex())) {
+                    it.split(" ")
+                } else {
+                    return println("The position input is invalid.")
+                }
+            }
+            positionX = position[0].toInt().apply {
+                if (this !in 0..(myImage.width - myWatermark.width)) {
+                    return println("The position input is out of range.")
+                }
+            }
+            positionY = position[1].toInt().apply {
+                if (this !in 0..(myImage.height - myWatermark.height)) {
+                    return println("The position input is out of range.")
+                }
+            }
+        }
 
         println("Input the output image filename (jpg or png extension):")
         val output = File(readln().let {
@@ -93,13 +109,20 @@ fun main() {
         val myOutput = BufferedImage(myImage.width, myImage.height, BufferedImage.TYPE_INT_RGB)
         var x2 = 0
         var y2 = 0
-        var singleX = 0
-        var singleY = 0
+        var singleX = myImage.width
+        var singleY = myImage.height + 1
 
         for (x in 0 until myImage.width) {
             for (y in 0 until myImage.height) {
                 if (x2 >= myWatermark.width) x2 = 0
                 if (y2 >= myWatermark.height) y2 = 0
+                if (x == positionX && y == positionY) {
+                    singleY = 0
+                    singleX = 0
+                    x2 = 0
+                    y2 = 0
+                }
+
 
                 val i = Color(myImage.getRGB(x, y))
                 val w = Color(myWatermark.getRGB(x2, y2), alphaChannel)
@@ -121,6 +144,8 @@ fun main() {
                 } else {
                     if (transparency) {
                         if (w.rgb == transparencyColor.rgb) {
+                            myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
+                        } else if (single && (singleX >= myWatermark.width || singleY >= myWatermark.height)) {
                             myOutput.setRGB(x, y, Color(myImage.getRGB(x, y)).rgb)
                         } else {
                             myOutput.setRGB(x, y, color.rgb)
